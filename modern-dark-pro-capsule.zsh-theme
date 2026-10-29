@@ -812,7 +812,7 @@ function _modern_dark_pro_compute_first_line_padding() {
   [[ "${cols}" -le 0 ]] && cols=80
 
   # Fill remaining width with gray ─ line ending with ╮
-  local pad_width=$(( cols - left_width - right_width ))
+  local pad_width=$(( cols - left_width - right_width - 1 ))
   local padding=""
   if (( pad_width > 2 )); then
     for ((i=1; i<pad_width; i++)); do
@@ -823,7 +823,7 @@ function _modern_dark_pro_compute_first_line_padding() {
     padding="╮"
   fi
 
-  echo -n "${left}%F{${COLOR_CONNECTOR}}${padding}%f${right}"
+  echo -n "${left} %F{${COLOR_CONNECTOR}}${padding}%f${right}"
 }
 
 # Renders the first line of the prompt for "classic" layout with a dynamic right-aligned clock
