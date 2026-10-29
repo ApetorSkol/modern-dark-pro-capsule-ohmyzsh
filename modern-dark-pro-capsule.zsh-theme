@@ -77,6 +77,9 @@ MODERN_DARK_PRO_CLICKABLE_PATH="${MODERN_DARK_PRO_CLICKABLE_PATH:-true}"
 MODERN_DARK_PRO_CLICKABLE_GIT="${MODERN_DARK_PRO_CLICKABLE_GIT:-true}"
 
 
+# Remove default 1-char right margin on RPROMPT so ╯ sits flush at edge
+ZLE_RPROMPT_INDENT=0
+
 # Enable terminal colors for BSD ls (macOS) and GNU ls (Linux)
 export CLICOLOR=1
 if [[ "${MODERN_DARK_PRO_VARIANT}" == "monokai" ]]; then
@@ -775,14 +778,9 @@ function _modern_dark_pro_prompt_line() {
 # Helper to compute exact dynamic padding for first line
 function _modern_dark_pro_compute_first_line_padding() {
   local left="$1"
-  
-  if [[ "${MODERN_DARK_PRO_CLOCK_POSITION}" == "rprompt" ]]; then
-    echo -n "${left}"
-    return
-  fi
 
   local expanded_left="${(%%)left}"
-  
+
   # Strip OSC 8 hyperlinks and ANSI color escape sequences for exact visual width calculation
   local clean_left="${expanded_left}"
   while [[ "${clean_left}" =~ $'\x1b\\]8;;[^\x1b]*\x1b\\\\' ]]; do
@@ -791,13 +789,16 @@ function _modern_dark_pro_compute_first_line_padding() {
   setopt local_options extended_glob
   clean_left="${clean_left//$'\x1b'\[[0-9;]##[a-zA-Z]/}"
   local left_width=${(m)#clean_left}
-  
-  # Prepare the right-aligned clock block
-  local right="%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S}%f"
-  local expanded_right="${(%%)right}"
-  local clean_right="${expanded_right//$'\x1b'\[[0-9;]##[a-zA-Z]/}"
-  local right_width=${(m)#clean_right}
-  
+
+  # Prepare right-aligned clock block (empty if clock not on this line)
+  local right="" right_width=0
+  if [[ "${MODERN_DARK_PRO_CLOCK_POSITION}" != "rprompt" ]]; then
+    right="%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S}%f"
+    local expanded_right="${(%%)right}"
+    local clean_right="${expanded_right//$'\x1b'\[[0-9;]##[a-zA-Z]/}"
+    right_width=${(m)#clean_right}
+  fi
+
   # Determine dynamic terminal column width (fallback to stty / tput if COLUMNS is stale)
   local cols="${COLUMNS:-0}"
   local tty_cols=$(stty size 2>/dev/null | awk '{print $2}')
@@ -810,34 +811,30 @@ function _modern_dark_pro_compute_first_line_padding() {
   fi
   [[ "${cols}" -le 0 ]] && cols=80
 
-  # Calculate required padding width (subtracting left/right width from terminal columns)
+  # Fill remaining width with gray ─ line ending with ╮
   local pad_width=$(( cols - left_width - right_width ))
-  local padding=" "
-  if (( pad_width > 1 )); then
-    padding=""
-    for ((i=1; i<=pad_width; i++)); do
-      padding+=" "
+  local padding=""
+  if (( pad_width > 2 )); then
+    for ((i=1; i<pad_width; i++)); do
+      padding+="─"
     done
+    padding+="╮"
+  elif (( pad_width > 0 )); then
+    padding="╮"
   fi
-  
-  echo -n "${left}${padding}${right}"
+
+  echo -n "${left}%F{${COLOR_CONNECTOR}}${padding}%f${right}"
 }
 
 # Renders the first line of the prompt for "classic" layout with a dynamic right-aligned clock
 function _modern_dark_pro_first_line() {
-  local left="%F{${COLOR_CONNECTOR}}┌─%f $(_modern_dark_pro_prompt_line)"
+  local left="%F{${COLOR_CONNECTOR}}╭─%f $(_modern_dark_pro_prompt_line)"
   _modern_dark_pro_compute_first_line_padding "${left}"
 }
 
 # Renders the first line for "two-line" layout, dynamically right-aligning the clock if enabled
 function _modern_dark_pro_first_line_two_line() {
   local left="$(_modern_dark_pro_prompt_line)"
-  
-  if [[ "${MODERN_DARK_PRO_SHOW_CLOCK}" != "true" ]]; then
-    echo -n "${left}"
-    return
-  fi
-  
   _modern_dark_pro_compute_first_line_padding "${left}"
 }
 
@@ -847,9 +844,9 @@ function _modern_dark_pro_setup_prompt() {
   
   if [[ "${layout}" == "classic" ]]; then
     PROMPT='$(_modern_dark_pro_first_line)
-%F{${COLOR_CONNECTOR}}└─%f ${_MODERN_DARK_PRO_PROMPT_CHAR} '
+%F{${COLOR_CONNECTOR}}╰─%f ${_MODERN_DARK_PRO_PROMPT_CHAR} '
     if [[ "${MODERN_DARK_PRO_CLOCK_POSITION}" == "rprompt" ]]; then
-      RPROMPT='%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S}%f'
+      RPROMPT='%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S} ╯%f'
     else
       RPROMPT=''
     fi
@@ -857,14 +854,14 @@ function _modern_dark_pro_setup_prompt() {
     PROMPT='$(_modern_dark_pro_first_line_two_line)
 ${_MODERN_DARK_PRO_PROMPT_CHAR} '
     if [[ "${MODERN_DARK_PRO_CLOCK_POSITION}" == "rprompt" ]]; then
-      RPROMPT='%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S}%f'
+      RPROMPT='%F{${COLOR_CONNECTOR}}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S} ╯%f'
     else
       RPROMPT=''
     fi
   else # single line layout
     PROMPT='$(_modern_dark_pro_prompt_line) ${_MODERN_DARK_PRO_PROMPT_CHAR} '
     if [[ "${MODERN_DARK_PRO_SHOW_CLOCK}" == "true" ]]; then
-      RPROMPT='%F{#666666}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S}%f'
+      RPROMPT='%F{#666666}${MODERN_DARK_PRO_TIME_SYMBOL} %D{%H:%M:%S} ╯%f'
     else
       RPROMPT=''
     fi
