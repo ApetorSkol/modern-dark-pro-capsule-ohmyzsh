@@ -11,7 +11,7 @@ if [[ "${COLORTERM}" == "truecolor" || "${COLORTERM}" == "24bit" ]]; then
   # TrueColor 24-bit Hex Colors
   if [[ "${MODERN_DARK_PRO_VARIANT}" == "monokai" ]]; then
     COLOR_CONNECTOR="#75715e"   # Gray
-    COLOR_PATH="#66d9ef"        # Blue
+    COLOR_PATH="#4fb8cc"        # Blue (darkened)
     COLOR_GIT_BRANCH="#ae81ff"  # Purple
     COLOR_SUCCESS="#a6e22e"     # Green
     COLOR_WARNING="#e6db74"     # Yellow
@@ -20,7 +20,7 @@ if [[ "${COLORTERM}" == "truecolor" || "${COLORTERM}" == "24bit" ]]; then
     COLOR_TEXT="#f8f8f2"        # Foreground
   else
     COLOR_CONNECTOR="#555555"   # Border/Connector Gray
-    COLOR_PATH="#64b5f6"        # Blue
+    COLOR_PATH="#4a96d1"        # Blue (darkened)
     COLOR_GIT_BRANCH="#ba68c8"  # Purple
     COLOR_SUCCESS="#81c784"     # Green
     COLOR_WARNING="#ffb74d"     # Orange/Yellow
