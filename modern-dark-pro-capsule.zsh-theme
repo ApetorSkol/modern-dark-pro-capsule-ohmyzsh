@@ -419,7 +419,7 @@ function _modern_dark_pro_git_changes_capsule() {
       if [[ ${i} -eq 1 ]]; then
         result+="%F{${bg}}%K{${bg}} %F{${pill_fg}}${MODERN_DARK_PRO_CHANGES_SYMBOL} ${label}"
       else
-        result+=" %K{${bg}}%F{${pill_fg}} ${label}"
+        result+="%F{${seg_colors[$((i-1))]}}%K{${bg}}%F{${pill_fg}} ${label}"
       fi
     done
     result+=" %k%F{${seg_colors[$seg_count]}}%f"
