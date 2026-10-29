@@ -349,7 +349,6 @@ function _modern_dark_pro_git_branch_capsule() {
   
   local git_url=""
   if [[ "${MODERN_DARK_PRO_CLICKABLE_GIT}" == "true" && -n "${_MODERN_DARK_PRO_CACHED_GIT_REMOTE}" && -z "${SSH_CONNECTION}" && -z "${SSH_CLIENT}" && -z "${SSH_TTY}" ]]; then
-    local REPLY
     _modern_dark_pro_urlencode "${branch_info}"
     local escaped_ref="${REPLY//\%/%%}"
     if [[ "${_MODERN_DARK_PRO_CACHED_GIT_REMOTE}" == *"bitbucket"* ]]; then
