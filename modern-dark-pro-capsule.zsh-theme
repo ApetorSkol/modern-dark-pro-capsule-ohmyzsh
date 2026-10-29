@@ -51,6 +51,15 @@ else
   fi
 fi
 
+# Save original colors for error-state toggling
+_ORIG_COLOR_CONNECTOR="${COLOR_CONNECTOR}"
+_ORIG_COLOR_PATH="${COLOR_PATH}"
+_ORIG_COLOR_GIT_BRANCH="${COLOR_GIT_BRANCH}"
+_ORIG_COLOR_SUCCESS="${COLOR_SUCCESS}"
+_ORIG_COLOR_WARNING="${COLOR_WARNING}"
+_ORIG_COLOR_EXEC_TIME="${COLOR_EXEC_TIME}"
+_ORIG_COLOR_TEXT="${COLOR_TEXT}"
+
 # Configuration Variables with defaults
 MODERN_DARK_PRO_CHAR="${MODERN_DARK_PRO_CHAR:-❯}"
 MODERN_DARK_PRO_SHOW_EXEC_TIME="${MODERN_DARK_PRO_SHOW_EXEC_TIME:-true}"
@@ -690,6 +699,25 @@ function _modern_dark_pro_precmd() {
     fi
   else
     _MODERN_DARK_PRO_ELAPSED_TIME_VAL=""
+  fi
+
+  # On error: turn all colors red. On success: restore originals.
+  if [[ $exit_code -ne 0 ]]; then
+    COLOR_CONNECTOR="${COLOR_ERROR}"
+    COLOR_PATH="${COLOR_ERROR}"
+    COLOR_GIT_BRANCH="${COLOR_ERROR}"
+    COLOR_SUCCESS="${COLOR_ERROR}"
+    COLOR_WARNING="${COLOR_ERROR}"
+    COLOR_EXEC_TIME="${COLOR_ERROR}"
+    COLOR_TEXT="${COLOR_ERROR}"
+  else
+    COLOR_CONNECTOR="${_ORIG_COLOR_CONNECTOR}"
+    COLOR_PATH="${_ORIG_COLOR_PATH}"
+    COLOR_GIT_BRANCH="${_ORIG_COLOR_GIT_BRANCH}"
+    COLOR_SUCCESS="${_ORIG_COLOR_SUCCESS}"
+    COLOR_WARNING="${_ORIG_COLOR_WARNING}"
+    COLOR_EXEC_TIME="${_ORIG_COLOR_EXEC_TIME}"
+    COLOR_TEXT="${_ORIG_COLOR_TEXT}"
   fi
 
   # Dynamic prompt character coloring based on success/failure & root privilege check
