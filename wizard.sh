@@ -461,7 +461,8 @@ else
 fi
 
 rm -f "$cfg_file" "$cleaned_zshrc"
-mv "$tmp_file" "$ZSHRC"
+cat "$tmp_file" > "$ZSHRC"
+rm -f "$tmp_file"
 
 echo ""
 echo -e "${BOLD}${GREEN}✅ ${T_SAVED}${RESET}"
