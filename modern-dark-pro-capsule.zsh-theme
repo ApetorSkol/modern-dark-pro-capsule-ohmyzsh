@@ -12,20 +12,20 @@ if [[ "${COLORTERM}" == "truecolor" || "${COLORTERM}" == "24bit" ]]; then
   if [[ "${MODERN_DARK_PRO_VARIANT}" == "monokai" ]]; then
     COLOR_CONNECTOR="#75715e"   # Gray
     COLOR_PATH="#66d9ef"        # Blue
-    COLOR_GIT_BRANCH="#a6e22e"  # Green/Sage to match capsule aesthetic
+    COLOR_GIT_BRANCH="#ae81ff"  # Purple
     COLOR_SUCCESS="#a6e22e"     # Green
     COLOR_WARNING="#e6db74"     # Yellow
     COLOR_ERROR="#f92672"       # Red
-    COLOR_EXEC_TIME="#ae81ff"   # Purple
+    COLOR_EXEC_TIME="#f8f8f2"   # White
     COLOR_TEXT="#f8f8f2"        # Foreground
   else
     COLOR_CONNECTOR="#555555"   # Border/Connector Gray
     COLOR_PATH="#64b5f6"        # Blue
-    COLOR_GIT_BRANCH="#81c784"  # Sage green matching the screenshot
+    COLOR_GIT_BRANCH="#ba68c8"  # Purple
     COLOR_SUCCESS="#81c784"     # Green
     COLOR_WARNING="#ffb74d"     # Orange/Yellow
     COLOR_ERROR="#e57373"       # Red
-    COLOR_EXEC_TIME="#ba68c8"   # Purple
+    COLOR_EXEC_TIME="#e0e0e0"   # White
     COLOR_TEXT="#e0e0e0"        # Foreground
   fi
 else
@@ -33,20 +33,20 @@ else
   if [[ "${MODERN_DARK_PRO_VARIANT}" == "monokai" ]]; then
     COLOR_CONNECTOR="101"
     COLOR_PATH="81"
-    COLOR_GIT_BRANCH="148"
+    COLOR_GIT_BRANCH="141"
     COLOR_SUCCESS="148"
     COLOR_WARNING="185"
     COLOR_ERROR="197"
-    COLOR_EXEC_TIME="141"
+    COLOR_EXEC_TIME="255"
     COLOR_TEXT="255"
   else
     COLOR_CONNECTOR="240"
     COLOR_PATH="75"
-    COLOR_GIT_BRANCH="114"
+    COLOR_GIT_BRANCH="176"
     COLOR_SUCCESS="114"
     COLOR_WARNING="215"
     COLOR_ERROR="167"
-    COLOR_EXEC_TIME="176"
+    COLOR_EXEC_TIME="254"
     COLOR_TEXT="254"
   fi
 fi
@@ -376,26 +376,95 @@ function _modern_dark_pro_git_changes_capsule() {
     return
   fi
 
-  # E.g. "5 • +97 -1"
-  local content="${total_files}"
-  
-  if [[ ${_MODERN_DARK_PRO_GIT_INSERTIONS} -gt 0 || ${_MODERN_DARK_PRO_GIT_DELETIONS} -gt 0 ]]; then
-    content+=" %F{#666666}•%f"
-  fi
-  
+  # Build per-change-type segments for rainbow capsule
+  local -a seg_colors seg_labels
+
   if [[ ${_MODERN_DARK_PRO_GIT_INSERTIONS} -gt 0 ]]; then
-    content+=" %F{${COLOR_SUCCESS}}+${_MODERN_DARK_PRO_GIT_INSERTIONS}%f"
+    seg_colors+=("${COLOR_SUCCESS}")
+    seg_labels+=("+${_MODERN_DARK_PRO_GIT_INSERTIONS}")
   fi
-  
+
   if [[ ${_MODERN_DARK_PRO_GIT_DELETIONS} -gt 0 ]]; then
-    content+=" %F{${COLOR_ERROR}}-${_MODERN_DARK_PRO_GIT_DELETIONS}%f"
+    seg_colors+=("${COLOR_ERROR}")
+    seg_labels+=("-${_MODERN_DARK_PRO_GIT_DELETIONS}")
   fi
 
-  if [[ ${_MODERN_DARK_PRO_GIT_UNTRACKED} -gt 0 && ${_MODERN_DARK_PRO_GIT_FILES} -eq 0 ]]; then
-    content+=" %F{${COLOR_WARNING}}?${_MODERN_DARK_PRO_GIT_UNTRACKED}%f"
+  if [[ ${_MODERN_DARK_PRO_GIT_UNTRACKED} -gt 0 ]]; then
+    seg_colors+=("${COLOR_WARNING}")
+    seg_labels+=("?${_MODERN_DARK_PRO_GIT_UNTRACKED}")
   fi
 
-  _modern_dark_pro_make_pill "${COLOR_TEXT}" "${MODERN_DARK_PRO_CHANGES_SYMBOL}" "${content}"
+  if [[ ${#seg_colors} -eq 0 ]]; then
+    seg_colors+=("${COLOR_TEXT}")
+    seg_labels+=("${total_files}")
+  fi
+
+  # Single segment: use standard pill
+  if [[ ${#seg_colors} -eq 1 ]]; then
+    _modern_dark_pro_make_pill "${seg_colors[1]}" "${MODERN_DARK_PRO_CHANGES_SYMBOL}" "${seg_labels[1]}"
+    return
+  fi
+
+  local style="${MODERN_DARK_PRO_PILL_STYLE:-bracket}"
+  local seg_count=${#seg_colors}
+
+  if [[ "${style}" == "round" && "${MODERN_DARK_PRO_PILL_COLOR_STYLE:-solid}" == "solid" ]]; then
+    local pill_fg="${MODERN_DARK_PRO_PILL_TEXT_COLOR:-#111111}"
+    local result=""
+
+    for ((i = 1; i <= seg_count; i++)); do
+      local bg="${seg_colors[$i]}"
+      local label="${seg_labels[$i]}"
+
+      if [[ ${i} -eq 1 ]]; then
+        result+="%F{${bg}}%K{${bg}} %F{${pill_fg}}${MODERN_DARK_PRO_CHANGES_SYMBOL} ${label}"
+      else
+        result+=" %K{${bg}}%F{${pill_fg}} ${label}"
+      fi
+    done
+    result+=" %k%F{${seg_colors[$seg_count]}}%f"
+
+    REPLY="${result}"
+  elif [[ "${style}" == "round" ]]; then
+    local pill_bg="#282828"
+    local result="%F{${pill_bg}}%K{${pill_bg}} "
+    for ((i = 1; i <= seg_count; i++)); do
+      local fg="${seg_colors[$i]}"
+      local label="${seg_labels[$i]}"
+      if [[ ${i} -eq 1 ]]; then
+        result+="%F{${fg}}${MODERN_DARK_PRO_CHANGES_SYMBOL} ${label}%f"
+      else
+        result+=" %F{${fg}}${label}%f"
+      fi
+    done
+    result+=" %k%F{${pill_bg}}%f"
+    REPLY="${result}"
+  elif [[ "${style}" == "bracket" ]]; then
+    local result="%F{${MODERN_DARK_PRO_BORDER_COLOR}}[ %f"
+    for ((i = 1; i <= seg_count; i++)); do
+      local fg="${seg_colors[$i]}"
+      local label="${seg_labels[$i]}"
+      if [[ ${i} -eq 1 ]]; then
+        result+="%F{${fg}}${MODERN_DARK_PRO_CHANGES_SYMBOL} ${label}%f"
+      else
+        result+=" %F{${fg}}${label}%f"
+      fi
+    done
+    result+=" %F{${MODERN_DARK_PRO_BORDER_COLOR}}]%f"
+    REPLY="${result}"
+  else
+    local result=""
+    for ((i = 1; i <= seg_count; i++)); do
+      local fg="${seg_colors[$i]}"
+      local label="${seg_labels[$i]}"
+      if [[ ${i} -eq 1 ]]; then
+        result+=" %F{${fg}}${MODERN_DARK_PRO_CHANGES_SYMBOL} ${label}%f"
+      else
+        result+=" %F{${fg}}${label}%f"
+      fi
+    done
+    REPLY="${result}"
+  fi
 }
 
 function _modern_dark_pro_ssh_capsule() {
