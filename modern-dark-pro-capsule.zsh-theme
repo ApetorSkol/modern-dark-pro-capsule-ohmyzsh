@@ -51,6 +51,29 @@ else
   fi
 fi
 
+# SSH Override: shift palette toward orange when connected remotely
+if [[ -n "${SSH_CONNECTION}" || -n "${SSH_CLIENT}" || -n "${SSH_TTY}" ]]; then
+  if [[ "${COLORTERM}" == "truecolor" || "${COLORTERM}" == "24bit" ]]; then
+    COLOR_CONNECTOR="#7a6030"
+    COLOR_PATH="#d4874a"
+    COLOR_GIT_BRANCH="#cc7a42"
+    COLOR_SUCCESS="#b5a236"
+    COLOR_WARNING="#ff9933"
+    COLOR_ERROR="#e06838"
+    COLOR_EXEC_TIME="#f0d0a0"
+    COLOR_TEXT="#f0d0a0"
+  else
+    COLOR_CONNECTOR="130"
+    COLOR_PATH="172"
+    COLOR_GIT_BRANCH="173"
+    COLOR_SUCCESS="142"
+    COLOR_WARNING="208"
+    COLOR_ERROR="166"
+    COLOR_EXEC_TIME="223"
+    COLOR_TEXT="223"
+  fi
+fi
+
 # Save original colors for error-state toggling
 _ORIG_COLOR_CONNECTOR="${COLOR_CONNECTOR}"
 _ORIG_COLOR_PATH="${COLOR_PATH}"
